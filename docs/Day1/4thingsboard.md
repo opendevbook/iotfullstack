@@ -2,96 +2,128 @@
 
 The ThingsBoard.h library provides an interface for ESP32 (or other devices) to connect to a ThingsBoard IoT platform instance, allowing for telemetry data transmission, RPC (remote procedure call) commands, and more. Here’s a basic guide on how to set it up and use it:
 
-Example Code: muict-lab2/
+prerequisition:
+1 Run in Platform.io
+
+![](../assets/images/muict_thingsboard1.png)
+
+Example Code:
 
 ```cpp
+#ifdef ESP32
 #include <WiFi.h>
+#include <WiFiClient.h>
+#include <Arduino_MQTT_Client.h>
 #include <ThingsBoard.h>
+#endif
 
-const char* ssid = "your_ssid";
-const char* password = "your_password";
+// Define WiFi credentials and ThingsBoard server details
+constexpr char WIFI_SSID[] = "YOUR_WIFI_SSID";
+constexpr char WIFI_PASSWORD[] = "YOUR_WIFI_PASSWORD";
+constexpr char TOKEN[] = "YOUR_DEVICE_ACCESS_TOKEN";
+constexpr char THINGSBOARD_SERVER[] = "demo.thingsboard.io";
+constexpr uint16_t THINGSBOARD_PORT = 1883U; // Default MQTT port
 
-#define TOKEN "your_access_token"             // Your ThingsBoard device token
-#define THINGSBOARD_SERVER "your_server_ip"    // Your ThingsBoard server
+// Telemetry keys
+constexpr char TEMPERATURE_KEY[] = "temperature";
+constexpr char HUMIDITY_KEY[] = "humidity";
+constexpr uint16_t MAX_MESSAGE_SIZE = 128U;
+constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
 
+// Initialize WiFi and MQTT client
 WiFiClient espClient;
-ThingsBoard tb(espClient);
+Arduino_MQTT_Client mqttClient(espClient);
+ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
-// Define LED pin and threshold variable
-#define LED_PIN 2
-int threshold = 50;  // Default threshold value
-
-// Callback function to handle the RPC command "setLED"
-void onSetLED(const RPC_Data &data) {
-  bool enabled = data["params"];
-  digitalWrite(LED_PIN, enabled ? HIGH : LOW);
-  Serial.println(enabled ? "LED is ON" : "LED is OFF");
-}
-
-// Callback function to handle shared attribute updates
-void onSharedAttributeUpdate(const Shared_Attribute_Data &data) {
-  if (data.HasKey("threshold")) {
-    threshold = data["threshold"].as<int>();
-    Serial.print("Threshold updated to: ");
-    Serial.println(threshold);
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(LED_PIN, OUTPUT);
-
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+void InitWiFi()
+{
+  Serial.println("Connecting to AP ...");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("Connected to Wi-Fi");
-
-  // Connect to ThingsBoard
-  if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
-    Serial.println("Failed to connect to ThingsBoard");
-  } else {
-    Serial.println("Connected to ThingsBoard");
-
-    // Subscribe to the "setLED" RPC command
-    tb.RPC_Subscribe("setLED", onSetLED);
-
-    // Request the current value of the shared attribute "threshold"
-    tb.Shared_Attributes_Request("threshold", onSharedAttributeUpdate);
-
-    // Subscribe to updates for shared attributes
-    tb.Shared_Attributes_Subscribe(onSharedAttributeUpdate);
-  }
+  Serial.println("Connected to AP");
 }
 
-void loop() {
-  // Reconnect if disconnected
-  if (!tb.connected()) {
-    if (!tb.connect(THINGSBOARD_SERVER, TOKEN)) {
-      Serial.println("Failed to reconnect to ThingsBoard");
-      delay(5000);
+bool reconnect()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    return true;
+  }
+  InitWiFi();
+  return true;
+}
+
+void setup()
+{
+  randomSeed(analogRead(0)); // Initialize random seed
+  Serial.begin(SERIAL_DEBUG_BAUD);
+  delay(1000);
+  InitWiFi();
+}
+
+void loop()
+{
+  delay(1000);
+
+  if (!reconnect())
+  {
+    return;
+  }
+
+  if (!tb.connected())
+  {
+    Serial.printf("Connecting to: %s with token %s\n", THINGSBOARD_SERVER, TOKEN);
+    if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT))
+    {
+      Serial.println("Failed to connect");
       return;
     }
-    Serial.println("Reconnected to ThingsBoard");
-
-    // Re-subscribe to the RPC command and shared attributes after reconnecting
-    tb.RPC_Subscribe("setLED", onSetLED);
-    tb.Shared_Attributes_Subscribe(onSharedAttributeUpdate);
   }
 
-  tb.loop();  // Maintain the MQTT connection and handle RPC calls and shared attribute updates
-  delay(1000);
+  Serial.println("Sending temperature data...");
+  tb.sendTelemetryData(TEMPERATURE_KEY, random(10, 31));
+
+  Serial.println("Sending humidity data...");
+  tb.sendTelemetryData(HUMIDITY_KEY, random(40, 90));
+
+  tb.loop();
 }
+
 ```
 
-**Explanation of Key Parts**
+platform.ini
 
-- **onSharedAttributeUpdate() Callback Function:** This function is called whenever an update to the shared attribute ("threshold") is received. It retrieves the updated value of the attribute and assigns it to the local threshold variable.
+```
+[env:esp32doit-devkit-v1]
+platform = espressif32
+board = esp32doit-devkit-v1
+framework = arduino
+lib_ldf_mode = chain+
+lib_deps =
+    Update
+    knolleary/PubSubClient @ ^2.8
+    arduino-libraries/ArduinoHttpClient @ ^0.6.1
+    bblanchon/ArduinoJson @ ^7.2.0
+    https://github.com/thingsboard/thingsboard-client-sdk.git
+    https://github.com/arduino-libraries/ArduinoMqttClient.git
 
-- **tb.Shared_Attributes_Request("threshold", onSharedAttributeUpdate);:** This function requests the current value of the "threshold" shared attribute from ThingsBoard as soon as the ESP32 connects. The current value is then retrieved and handled by onSharedAttributeUpdate.
+monitor_speed = 115200
+```
 
-- **tb.Shared_Attributes_Subscribe(onSharedAttributeUpdate);:** This function subscribes the ESP32 to receive updates for any shared attributes, ensuring that the device is notified whenever "threshold" is changed on the ThingsBoard server.
+![](../assets/images/muict_tb_dashboard.png)
 
-![](../assets/images/thingsboard_library.png)
+Add chart:
+![](../assets/images/muict_tb_add_chart.png)
+
+Add Line Chart:
+![](../assets/images/muict_tb_add_chart2.png)
+
+Add Data Source info:
+![](../assets/images/muict_tb_add_chart3.png)
+
+Result Data Visualization:
+![](../assets/images/muict_tb_add_chart4.png)
