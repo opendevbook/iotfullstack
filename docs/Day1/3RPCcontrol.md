@@ -1,4 +1,4 @@
-# 3 RPC control
+# 4 What's RPC control?
 
 ThingsBoard RPC (Remote Procedure Call) control allows you to send commands from the ThingsBoard server to a device, which is especially useful for controlling connected devices. Here's how to set up and handle RPC commands on ThingsBoard and the ESP32 device.
 

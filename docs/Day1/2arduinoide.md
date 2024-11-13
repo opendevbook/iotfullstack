@@ -1,4 +1,4 @@
-# 2 Arduino IDE
+# 3 Arduino IDE
 
 ![](../assets/images/arduino1.png)
 

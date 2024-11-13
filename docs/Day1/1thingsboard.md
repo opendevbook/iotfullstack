@@ -1,4 +1,4 @@
-# 1 Create Thingsboard Account
+# 2 Create Thingsboard Account
 
 Visit [https://demo.thingsboard.io/login](https://demo.thingsboard.io/login)
 

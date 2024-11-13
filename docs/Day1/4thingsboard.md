@@ -1,10 +1,10 @@
-# Thingsboard.h library
+# Introduct Thingsboard.h library
 
 The ThingsBoard.h library provides an interface for ESP32 (or other devices) to connect to a ThingsBoard IoT platform instance, allowing for telemetry data transmission, RPC (remote procedure call) commands, and more. Here’s a basic guide on how to set it up and use it:
 
 Example Code: muict-lab2/
 
-```c
+```cpp
 #include <WiFi.h>
 #include <ThingsBoard.h>
 
