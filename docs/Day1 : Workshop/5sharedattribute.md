@@ -1,4 +1,4 @@
-# Thingsboard Shared Attribute
+# 6 Thingsboard Shared Attribute
 
 In ThingsBoard, shared attributes are configuration values or settings that are stored on the server and can be updated by both the server and the device. They are ideal for managing device configurations remotely, such as firmware version, thresholds, or operational settings. Devices can receive updates for these attributes without needing to continuously poll the server, making shared attributes efficient for IoT applications.  
 **Key Features of Shared Attributes:**

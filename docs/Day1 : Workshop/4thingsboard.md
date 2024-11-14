@@ -1,4 +1,4 @@
-# Introduct Thingsboard.h library
+# 5 Introduct Thingsboard.h library
 
 The ThingsBoard.h library provides an interface for ESP32 (or other devices) to connect to a ThingsBoard IoT platform instance, allowing for telemetry data transmission, RPC (remote procedure call) commands, and more. Here’s a basic guide on how to set it up and use it:
 

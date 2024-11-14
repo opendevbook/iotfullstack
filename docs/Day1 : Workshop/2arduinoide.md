@@ -1,4 +1,4 @@
-# 3 Arduino IDE
+# 3 Arduino IDE : Upload Data
 
 ![](../assets/images/arduino1.png)
 

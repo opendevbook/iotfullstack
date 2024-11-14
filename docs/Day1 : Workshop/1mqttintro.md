@@ -104,7 +104,7 @@ Purpose: ESP32 uses this to respond back with success or status information once
 
 ![](../assets/images/topic_server_rpc.png)
 
-Example code:
+Example code: muict_lab1.ino
 
 ```cpp
 #include <WiFi.h>
