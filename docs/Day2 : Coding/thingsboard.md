@@ -1,5 +1,8 @@
 # Add thingsboard
 
+Discuss Overvies
+![](../assets/images/overview.png)
+
 ## Import Widget Bundle
 
 **crate bundle**
